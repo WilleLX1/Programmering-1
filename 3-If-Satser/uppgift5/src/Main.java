@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.util.Random;
 import java.util.Scanner;
+import java.io.*;
 
 public class Main {
     // ANSI färg koder
@@ -13,6 +14,8 @@ public class Main {
     public static final String CYAN = "\u001B[36m";
     public static final String WHITE = "\u001B[37m";
 
+    private static final String filePath = "C:\\users\\public\\FickPengar.txt";
+
     // Man inte kan ta ut mer pengar än vad som finns på kontot!
     // Lösenordskontroll…
     // Visa saldo efter uttag
@@ -20,6 +23,14 @@ public class Main {
     // Välja på att ta ut pengar eller se saldo
     // Endast ta ut jämna summor
     // Tydliga instruktioner
+
+    // Koppla med blackjack (Använd .txt .json eller .xml för att spara)
+    // Lägg till variabel för "fickPengar".
+
+
+    // Could I not make every client host the file locally and then I make
+    // another Java script that acts as a view point where I can see all
+    // players stats
 
     public static class User {
         private String name;
@@ -59,6 +70,7 @@ public class Main {
         User[] users = generateRandomUsers(numberOfUsers);
 
         // VARIABLER
+        int fickPengar = ReadFickPengar();
         String namn = "Okänd";
         int pinkod = 0;
         boolean inloggad = false;
@@ -71,7 +83,8 @@ public class Main {
         while (true) {
             // Skriva in PIN
             while (!inloggad) {
-                System.out.println("Skriv in din pin: ");
+                System.out.println("Du har " + fickPengar + " SEK i fickan.");
+                System.out.println("Skriv in din pin:");
                 pinkod = MenuScanner.nextInt();
 
                 for (int i = 0; i < numberOfUsers; i++) {
@@ -112,6 +125,9 @@ public class Main {
                             if (uttagVal == 100 || uttagVal == 200 || uttagVal == 300 || uttagVal == 400 || uttagVal == 500) {
                                 if (users[i].getMoney() >= uttagVal) {
                                     users[i].withdrawMoney(uttagVal);
+                                    fickPengar = (fickPengar + uttagVal);
+                                    // Updatera pengar filen
+                                    UpdateFickPengar(fickPengar);
                                     System.out.println(GREEN + "Uttaget på " + uttagVal + " SEK är godkänt" + RESET);
                                 } else {
                                     System.out.println(RED + "ERROR (Inte tillräckligt med pengar)" + RESET);
@@ -213,6 +229,61 @@ public class Main {
             return availableFirstNames[randomIndex];
         } else {
             return additionalFirstNames[randomIndex - availableFirstNames.length];
+        }
+    }
+
+    public static int ReadFickPengar() {
+        int currentPengar = 0;
+
+        try {
+            // Läser fickPengarna från filen.
+            FileReader fileReader = new FileReader(filePath);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            String line = bufferedReader.readLine();
+            if (line != null) {
+                currentPengar = Integer.parseInt(line);
+            }
+
+            // Stänger filen
+            bufferedReader.close();
+        } catch (FileNotFoundException e) {
+            // Om filen inte finns, skapa den och lägg "fickPengar" i den.
+            try {
+                FileWriter fileWriter = new FileWriter(filePath);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+                bufferedWriter.write("fickPengar");
+                bufferedWriter.newLine(); // Add a newline
+
+                // Stänger filen
+                bufferedWriter.close();
+
+                // Skapade filen!
+            } catch (IOException ex) {
+                System.err.println("ERROR (Kunde inte skapa fickPengar filen): " + ex.getMessage());
+            }
+        } catch (IOException e) {
+            System.err.println("ERROR (kunde inte läsa fickPengar filen): " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("ERROR (parsing integer): " + e.getMessage());
+        }
+
+        return currentPengar;
+    }
+
+    public static void UpdateFickPengar(int pengarToUpdate) {
+        try {
+            // Skriv det nya pengarToUpdate to file
+            FileWriter fileWriter = new FileWriter(filePath);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+            bufferedWriter.write(Integer.toString(pengarToUpdate));
+
+            // Stänger filen.
+            bufferedWriter.close();
+        } catch (IOException e) {
+            System.err.println("Error (writing to file): " + e.getMessage());
         }
     }
 }
